@@ -1,5 +1,3 @@
-'use strict';
-
 // local modules _must_ be explicitly mocked
 jest.mock('../lib/git-push', () => jest.requireActual('../lib/__mocks__/git-push'));
 jest.mock('../lib/is-anything-committed', () => jest.requireActual('../lib/__mocks__/is-anything-committed'));
@@ -17,13 +15,14 @@ jest.mock('@lerna-lite/core', () => ({
   throwIfUncommitted: jest.requireActual('../../../core/src/__mocks__/check-working-tree').throwIfUncommitted,
 }));
 
-const yargParser = require('yargs-parser');
-import { runLifecycle } from '@lerna-lite/core';
-const loadJsonFile = require('load-json-file');
 import 'dotenv/config';
+import { runLifecycle } from '@lerna-lite/core';
+import loadJsonFile from 'load-json-file';
+import yargParser from 'yargs-parser';
 
 // helpers
-const initFixture = require('@lerna-test/helpers').initFixtureFactory(__dirname);
+import helpers from '@lerna-test/helpers';
+const initFixture = helpers.initFixtureFactory(__dirname);
 
 // test command
 import { VersionCommand } from '../version-command';
@@ -79,7 +78,7 @@ describe('lifecycle scripts', () => {
       ['lifecycle', 'postversion'],
     ]);
 
-    expect(Array.from(loadJsonFile.registry.keys())).toStrictEqual([
+    expect(Array.from((loadJsonFile as any).registry.keys())).toStrictEqual([
       '/packages/package-1',
       '/packages/package-2',
       '/', // `package-lock.json` project root location

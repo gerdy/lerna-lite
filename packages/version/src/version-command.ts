@@ -246,12 +246,10 @@ export class VersionCommand extends Command<VersionCommandOption> {
       );
     }
 
-    this.updates = collectUpdates(
-      this.packageGraph.rawPackageList,
-      this.packageGraph,
-      this.execOpts,
-      { ...this.options, isIndependent} as UpdateCollectorOptions
-    ).filter((node) => {
+    this.updates = collectUpdates(this.packageGraph.rawPackageList, this.packageGraph, this.execOpts, {
+      ...this.options,
+      isIndependent,
+    } as UpdateCollectorOptions).filter((node) => {
       // --no-private completely removes private packages from consideration
       if (node.pkg.private && this.options.private === false) {
         // TODO: (major) make --no-private the default
@@ -603,6 +601,7 @@ export class VersionCommand extends Command<VersionCommandOption> {
           changelogPreset,
           rootPath,
           tagPrefix: this.tagPrefix,
+          changelogIncludeCommitAuthorFullname: this.options.changelogIncludeCommitAuthorFullname,
           changelogHeaderMessage: this.options.changelogHeaderMessage,
           changelogVersionMessage: this.options.changelogVersionMessage,
         }).then(({ logPath, newEntry }) => {
@@ -684,6 +683,7 @@ export class VersionCommand extends Command<VersionCommandOption> {
             rootPath,
             tagPrefix: this.tagPrefix,
             version: this.globalVersion,
+            changelogIncludeCommitAuthorFullname: this.options.changelogIncludeCommitAuthorFullname,
             changelogHeaderMessage: this.options.changelogHeaderMessage,
             changelogVersionMessage: this.options.changelogVersionMessage,
           }).then(({ logPath, newEntry }) => {
