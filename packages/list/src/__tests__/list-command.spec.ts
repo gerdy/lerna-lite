@@ -14,14 +14,14 @@ jest.mock('@lerna-lite/core', () => ({
 const { collectUpdates, logOutput } = require('@lerna-lite/core');
 
 // helpers
-const initFixture = require('@lerna-test/helpers').initFixtureFactory(__dirname);
+import helpers from '@lerna-test/helpers';
+const initFixture = helpers.initFixtureFactory(__dirname);
 
 // file under test
-const lernaList = require('@lerna-test/helpers').commandRunner(
-  require('../../../cli/src/cli-commands/cli-list-commands')
-);
 import { ListCommand } from '../index';
 import { factory } from '../list-command';
+import cliListCommands from '../../../cli/src/cli-commands/cli-list-commands';
+const lernaList = helpers.commandRunner(cliListCommands);
 
 // file under test
 const yargParser = require('yargs-parser');

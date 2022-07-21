@@ -74,6 +74,7 @@ export interface UpdateChangelogOption {
   changelogHeaderMessage?: string;
   changelogVersionMessage?: string;
   changelogPreset?: string;
+  changelogIncludeCommitAuthorFullname?: boolean | string;
   rootPath?: string;
   tagPrefix?: string;
   version?: string;
@@ -237,8 +238,10 @@ export interface UpdateCollectorOptions {
   /** Ref to use when querying git, defaults to most recent annotated tag */
   since?: string;
 
+  /** are we using Lerna independent mode? */
   isIndependent?: boolean;
 
+  /** are we using conventional commits? */
   conventionalCommits?: boolean;
   conventionalGraduate?: boolean;
   excludeDependents?: boolean;

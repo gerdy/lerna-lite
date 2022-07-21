@@ -11,9 +11,10 @@ const childProcess = require('../child-process');
 jest.spyOn(os, 'cpus').mockImplementation(() => new Array(42));
 
 // helpers
-const initFixture = require('@lerna-test/helpers').initFixtureFactory(__dirname);
+import helpers from '@lerna-test/helpers';
+const initFixture = helpers.initFixtureFactory(__dirname);
 import { loggingOutput } from '@lerna-test/helpers/logging-output';
-const { updateLernaConfig } = require('@lerna-test/helpers');
+import { updateLernaConfig } from '@lerna-test/helpers';
 
 // file under test
 import { Command } from '../command';

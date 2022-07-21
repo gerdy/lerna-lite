@@ -1,5 +1,3 @@
-'use strict';
-
 // FIXME: better mock for version command
 jest.mock('../../../version/dist/lib/git-push', () =>
   jest.requireActual('../../../version/src/lib/__mocks__/git-push')
@@ -45,18 +43,18 @@ jest.mock('../lib/npm-publish', () => jest.requireActual('../lib/__mocks__/npm-p
 jest.mock('load-json-file', () => jest.requireActual('../../../version/src/lib/__mocks__/load-json-file'));
 
 // mocked modules
-const loadJsonFile = require('load-json-file');
-const { packDirectory } = require('../lib/pack-directory');
-const { runLifecycle } = require('@lerna-lite/core');
+import loadJsonFile from 'load-json-file';
+import { packDirectory } from '../lib/pack-directory';
+import { runLifecycle } from '@lerna-lite/core';
 
 // helpers
-const initFixture = require('@lerna-test/helpers').initFixtureFactory(__dirname);
-const path = require('path');
+import helpers from '@lerna-test/helpers';
+const initFixture = helpers.initFixtureFactory(__dirname);
+import path from 'path';
 
 // test command
-const lernaPublish = require('@lerna-test/helpers').commandRunner(
-  require('../../../cli/src/cli-commands/cli-publish-commands')
-);
+import cliCommands from '../../../cli/src/cli-commands/cli-publish-commands';
+const lernaPublish = helpers.commandRunner(cliCommands);
 
 describe('lifecycle scripts', () => {
   const npmLifecycleEvent = process.env.npm_lifecycle_event;
@@ -89,7 +87,7 @@ describe('lifecycle scripts', () => {
       })
     );
 
-    expect(runLifecycle.getOrderedCalls()).toEqual([
+    expect((runLifecycle as any).getOrderedCalls()).toEqual([
       // TODO: separate from VersionCommand details
       ['lifecycle', 'preversion'],
       ['package-1', 'preversion'],
@@ -106,7 +104,11 @@ describe('lifecycle scripts', () => {
       ['lifecycle', 'postpublish'],
     ]);
 
-    expect(Array.from(loadJsonFile.registry.keys())).toStrictEqual(['/packages/package-1', '/packages/package-2', '/']);
+    expect(Array.from((loadJsonFile as any).registry.keys())).toStrictEqual([
+      '/packages/package-1',
+      '/packages/package-2',
+      '/',
+    ]);
   });
 
   it('does not execute recursive root scripts', async () => {
@@ -116,7 +118,7 @@ describe('lifecycle scripts', () => {
 
     await lernaPublish(cwd)();
 
-    expect(runLifecycle.getOrderedCalls()).toEqual([
+    expect((runLifecycle as any).getOrderedCalls()).toEqual([
       // TODO: separate from VersionCommand details
       ['lifecycle', 'preversion'],
       ['package-1', 'preversion'],
@@ -137,7 +139,7 @@ describe('lifecycle scripts', () => {
 
     await lernaPublish(cwd)();
 
-    expect(runLifecycle.getOrderedCalls()).toEqual([
+    expect((runLifecycle as any).getOrderedCalls()).toEqual([
       // TODO: separate from VersionCommand details
       ['package-1', 'preversion'],
       ['package-1', 'version'],

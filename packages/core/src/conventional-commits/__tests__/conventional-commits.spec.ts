@@ -2,13 +2,11 @@
 
 import fs from 'fs-extra';
 import path from 'path';
-const { getPackages } = require('../../project');
+const { Project } = require('../../project');
 
 // helpers
-const initFixture = require('@lerna-test/helpers').initFixtureFactory(__dirname);
-const { gitAdd } = require('@lerna-test/helpers');
-const { gitCommit } = require('@lerna-test/helpers');
-const { gitTag } = require('@lerna-test/helpers');
+import helpers, { gitAdd, gitCommit, gitTag } from '@lerna-test/helpers';
+const initFixture = helpers.initFixtureFactory(__dirname);
 
 // file under test
 import { recommendVersion, updateChangelog } from '../../conventional-commits';
@@ -27,7 +25,7 @@ describe('conventional-commits', () => {
   describe('recommendVersion()', () => {
     it('returns next version bump', async () => {
       const cwd = await initFixture('fixed');
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       // make a change in package-1
       await pkg1.set('changed', 1).serialize();
@@ -40,7 +38,7 @@ describe('conventional-commits', () => {
 
     it('returns next version prerelease bump with prereleaseId', async () => {
       const cwd = await initFixture('fixed');
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       // make a change in package-1
       await pkg1.set('changed', 1).serialize();
@@ -53,7 +51,7 @@ describe('conventional-commits', () => {
 
     it('returns package-specific bumps in independent mode', async () => {
       const cwd = await initFixture('independent');
-      const [pkg1, pkg2] = await getPackages(cwd);
+      const [pkg1, pkg2] = await Project.getPackages(cwd);
       const opts = { changelogPreset: 'angular' };
 
       // make a change in package-1 and package-2
@@ -76,7 +74,7 @@ describe('conventional-commits', () => {
 
     it('returns package-specific prerelease bumps in independent mode with prereleaseId', async () => {
       const cwd = await initFixture('independent');
-      const [pkg1, pkg2] = await getPackages(cwd);
+      const [pkg1, pkg2] = await Project.getPackages(cwd);
       const opts = { changelogPreset: 'angular' };
 
       // make a change in package-1 and package-2
@@ -99,7 +97,7 @@ describe('conventional-commits', () => {
 
     it('falls back to patch bumps for non-bumping commit types', async () => {
       const cwd = await initFixture('independent');
-      const [pkg1, pkg2] = await getPackages(cwd);
+      const [pkg1, pkg2] = await Project.getPackages(cwd);
       const opts = {
         // sometimes presets return null for the level, with no actual releaseType...
         changelogPreset: path.resolve(__dirname, '__fixtures__/fixed/scripts/null-preset.js'),
@@ -125,7 +123,7 @@ describe('conventional-commits', () => {
 
     it('supports local preset paths', async () => {
       const cwd = await initFixture('fixed');
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       // make a change in package-1
       await pkg1.set('changed', 1).serialize();
@@ -143,7 +141,7 @@ describe('conventional-commits', () => {
 
       await gitTag(cwd, 'dragons-are-awesome1.0.0');
 
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       // make a change in package-1
       await pkg1.set('changed', 1).serialize();
@@ -158,7 +156,7 @@ describe('conventional-commits', () => {
 
     it('propagates errors from callback', async () => {
       const cwd = await initFixture('fixed');
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       await expect(
         recommendVersion(pkg1, 'fixed', {
@@ -169,7 +167,7 @@ describe('conventional-commits', () => {
 
     it('throws an error when an implicit changelog preset cannot be loaded', async () => {
       const cwd = await initFixture('fixed');
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       await expect(
         recommendVersion(pkg1, 'fixed', {
@@ -180,7 +178,7 @@ describe('conventional-commits', () => {
 
     it('throws an error when an implicit changelog preset with scope cannot be loaded', async () => {
       const cwd = await initFixture('fixed');
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       await expect(
         recommendVersion(pkg1, 'fixed', {
@@ -191,7 +189,7 @@ describe('conventional-commits', () => {
 
     it('throws an error when an implicit changelog preset with scoped subpath cannot be loaded', async () => {
       const cwd = await initFixture('fixed');
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       await expect(
         recommendVersion(pkg1, 'fixed', {
@@ -202,7 +200,7 @@ describe('conventional-commits', () => {
 
     it('throws an error when an explicit changelog preset cannot be loaded', async () => {
       const cwd = await initFixture('fixed');
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       await expect(
         recommendVersion(pkg1, 'fixed', {
@@ -213,7 +211,7 @@ describe('conventional-commits', () => {
 
     it('throws an error when an explicit changelog preset with subpath cannot be loaded', async () => {
       const cwd = await initFixture('fixed');
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       await expect(
         recommendVersion(pkg1, 'fixed', {
@@ -225,7 +223,7 @@ describe('conventional-commits', () => {
     describe('bump for major version zero', () => {
       it('treats breaking changes as semver-minor', async () => {
         const cwd = await initFixture('major-zero');
-        const [pkg0] = await getPackages(cwd);
+        const [pkg0] = await Project.getPackages(cwd);
 
         // make a change in package-0
         await pkg0.set('changed', 1).serialize();
@@ -246,7 +244,7 @@ describe('conventional-commits', () => {
       beforeEach(async () => {
         let value = 0;
         cwd = await initFixture('independent');
-        [pkg] = await getPackages(cwd);
+        [pkg] = await Project.getPackages(cwd);
         opts = { changelogPreset: 'angular' };
         recommend = async (commitMessage, { initVersion } = {} as any) => {
           if (initVersion) {
@@ -294,7 +292,7 @@ describe('conventional-commits', () => {
     it('creates files if they do not exist', async () => {
       const cwd = (await initFixture('changelog-missing')) as string;
 
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
       const rootPkg = {
         name: 'root',
         location: cwd,
@@ -334,7 +332,7 @@ describe('conventional-commits', () => {
 
       await gitTag(cwd, 'v1.0.0');
 
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       // make a change in package-1
       await pkg1.set('changed', 1).serialize();
@@ -358,7 +356,7 @@ describe('conventional-commits', () => {
 
       await gitTag(cwd, 'dragons-are-awesome1.0.0');
 
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       // make a change in package-1
       await pkg1.set('changed', 1).serialize();
@@ -420,12 +418,82 @@ describe('conventional-commits', () => {
       `);
     });
 
+    it('supports custom tagPrefix in fixed mode and include commit author full name', async () => {
+      const cwd = await initFixture('fixed');
+
+      await gitTag(cwd, 'dragons-are-awesome1.0.0');
+
+      const [pkg1] = await Project.getPackages(cwd);
+
+      // make a change in package-1
+      await pkg1.set('changed', 1).serialize();
+      await gitAdd(cwd, pkg1.manifestLocation);
+      await gitCommit(cwd, 'fix: A second commit for our CHANGELOG');
+
+      // update version
+      await pkg1.set('version', '1.0.1').serialize();
+
+      const [leafChangelog, rootChangelog] = await Promise.all([
+        updateChangelog(pkg1, 'fixed', {
+          changelogIncludeCommitAuthorFullname: true,
+          tagPrefix: 'dragons-are-awesome',
+        }),
+        updateChangelog({ location: cwd } as Package, 'root', {
+          changelogIncludeCommitAuthorFullname: true,
+          tagPrefix: 'dragons-are-awesome',
+          version: '1.0.1',
+        }),
+      ]);
+
+      expect(leafChangelog.newEntry.trimRight()).toMatchInlineSnapshot(`
+        ## [1.0.1](/compare/dragons-are-awesome1.0.0...dragons-are-awesome1.0.1) (YYYY-MM-DD)
+
+
+        ### Bug Fixes
+
+        * A second commit for our CHANGELOG ([SHA](https://github.com/lerna/conventional-commits-fixed/commit/GIT_HEAD)) (Tester McPerson)
+      `);
+      expect(rootChangelog.newEntry.trimRight()).toMatchInlineSnapshot(`
+        ## [1.0.1](/compare/dragons-are-awesome1.0.0...dragons-are-awesome1.0.1) (YYYY-MM-DD)
+
+
+        ### Bug Fixes
+
+        * A second commit for our CHANGELOG ([SHA](https://github.com/lerna/conventional-commits-fixed/commit/GIT_HEAD)) (Tester McPerson)
+      `);
+
+      await gitAdd(cwd, pkg1.manifestLocation);
+      await gitCommit(cwd, 'chore(release): Publish v1.0.1');
+      await gitTag(cwd, 'dragons-are-awesome1.0.1');
+
+      // subsequent change
+      await pkg1.set('changed', 2).serialize();
+      await gitAdd(cwd, pkg1.manifestLocation);
+      await gitCommit(cwd, 'fix: A third commit for our CHANGELOG');
+
+      const lastRootChangelog = await updateChangelog({ location: cwd } as Package, 'root', {
+        changelogIncludeCommitAuthorFullname: true,
+        tagPrefix: 'dragons-are-awesome',
+        version: '1.0.2',
+      });
+
+      // second commit should not show up again
+      expect(lastRootChangelog.newEntry.trimRight()).toMatchInlineSnapshot(`
+        ## [1.0.2](/compare/dragons-are-awesome1.0.1...dragons-are-awesome1.0.2) (YYYY-MM-DD)
+
+
+        ### Bug Fixes
+
+        * A third commit for our CHANGELOG ([SHA](https://github.com/lerna/conventional-commits-fixed/commit/GIT_HEAD)) (Tester McPerson)
+      `);
+    });
+
     it('appends version bump message if no commits have been recorded', async () => {
       const cwd = await initFixture('fixed');
 
       await gitTag(cwd, 'v1.0.0');
 
-      const [pkg1, pkg2] = await getPackages(cwd);
+      const [pkg1, pkg2] = await Project.getPackages(cwd);
 
       // make a change in package-1
       await pkg1.set('changed', 1).serialize();
@@ -452,7 +520,7 @@ describe('conventional-commits', () => {
 
       await gitTag(cwd, 'v1.0.0');
 
-      const [pkg1] = await getPackages(cwd);
+      const [pkg1] = await Project.getPackages(cwd);
 
       // make a change in package-1
       await pkg1.set('changed', 1).serialize();
@@ -479,7 +547,7 @@ describe('conventional-commits', () => {
 
       await gitTag(cwd, 'v1.0.0');
 
-      const [, pkg2] = await getPackages(cwd);
+      const [, pkg2] = await Project.getPackages(cwd);
 
       // make a change in package-2
       await pkg2.set('changed', 1).serialize();
@@ -518,7 +586,7 @@ describe('conventional-commits', () => {
 
       await gitTag(cwd, 'v1.0.0');
 
-      const [, pkg2] = await getPackages(cwd);
+      const [, pkg2] = await Project.getPackages(cwd);
 
       // make a change in package-2
       await pkg2.set('changed', 1).serialize();
@@ -546,7 +614,7 @@ describe('conventional-commits', () => {
       await gitTag(cwd, 'package-1@1.0.0');
       await gitTag(cwd, 'package-2@1.0.0');
 
-      const [pkg1, pkg2] = await getPackages(cwd);
+      const [pkg1, pkg2] = await Project.getPackages(cwd);
 
       // make a change in package-1 and package-2
       await pkg1.set('changed', 1).serialize();
@@ -585,6 +653,104 @@ describe('conventional-commits', () => {
         ### Features
 
         * **thing:** added ([SHA](https://github.com/lerna/conventional-commits-independent/commit/GIT_HEAD))
+      `);
+    });
+
+    it('updates independent changelogs and include commit author full name', async () => {
+      const cwd = await initFixture('independent');
+
+      await gitTag(cwd, 'package-1@1.0.0');
+      await gitTag(cwd, 'package-2@1.0.0');
+
+      const [pkg1, pkg2] = await Project.getPackages(cwd);
+
+      // make a change in package-1 and package-2
+      await pkg1.set('changed', 1).serialize();
+      await pkg2.set('changed', 2).serialize();
+
+      await gitAdd(cwd, pkg1.manifestLocation);
+      await gitCommit(cwd, 'fix(stuff): changed');
+
+      await gitAdd(cwd, pkg2.manifestLocation);
+      await gitCommit(cwd, 'feat(thing): added');
+
+      // update versions
+      await pkg1.set('version', '1.0.1').serialize();
+      await pkg2.set('version', '1.1.0').serialize();
+
+      const opts = {
+        changelogPreset: 'conventional-changelog-angular',
+        changelogIncludeCommitAuthorFullname: true,
+      };
+      const [changelogOne, changelogTwo] = await Promise.all([
+        updateChangelog(pkg1, 'independent', opts),
+        updateChangelog(pkg2, 'independent', opts),
+      ]);
+
+      expect(changelogOne.newEntry.trimRight()).toMatchInlineSnapshot(`
+        ## [1.0.1](/compare/package-1@1.0.0...package-1@1.0.1) (YYYY-MM-DD)
+
+
+        ### Bug Fixes
+
+        * **stuff:** changed ([SHA](https://github.com/lerna/conventional-commits-independent/commit/GIT_HEAD)) (Tester McPerson)
+      `);
+      expect(changelogTwo.newEntry.trimRight()).toMatchInlineSnapshot(`
+        # [1.1.0](/compare/package-2@1.0.0...package-2@1.1.0) (YYYY-MM-DD)
+
+
+        ### Features
+
+        * **thing:** added ([SHA](https://github.com/lerna/conventional-commits-independent/commit/GIT_HEAD)) (Tester McPerson)
+      `);
+    });
+
+    it('updates independent changelogs and include commit author full name with a custom format when defined', async () => {
+      const cwd = await initFixture('independent');
+
+      await gitTag(cwd, 'package-1@1.0.0');
+      await gitTag(cwd, 'package-2@1.0.0');
+
+      const [pkg1, pkg2] = await Project.getPackages(cwd);
+
+      // make a change in package-1 and package-2
+      await pkg1.set('changed', 1).serialize();
+      await pkg2.set('changed', 2).serialize();
+
+      await gitAdd(cwd, pkg1.manifestLocation);
+      await gitCommit(cwd, 'fix(stuff): changed');
+
+      await gitAdd(cwd, pkg2.manifestLocation);
+      await gitCommit(cwd, 'feat(thing): added');
+
+      // update versions
+      await pkg1.set('version', '1.0.1').serialize();
+      await pkg2.set('version', '1.1.0').serialize();
+
+      const opts = {
+        changelogPreset: 'conventional-changelog-angular',
+        changelogIncludeCommitAuthorFullname: ' by <**%a**>',
+      };
+      const [changelogOne, changelogTwo] = await Promise.all([
+        updateChangelog(pkg1, 'independent', opts),
+        updateChangelog(pkg2, 'independent', opts),
+      ]);
+
+      expect(changelogOne.newEntry.trimRight()).toMatchInlineSnapshot(`
+        ## [1.0.1](/compare/package-1@1.0.0...package-1@1.0.1) (YYYY-MM-DD)
+
+
+        ### Bug Fixes
+
+        * **stuff:** changed ([SHA](https://github.com/lerna/conventional-commits-independent/commit/GIT_HEAD)) by <**Tester McPerson**>
+      `);
+      expect(changelogTwo.newEntry.trimRight()).toMatchInlineSnapshot(`
+        # [1.1.0](/compare/package-2@1.0.0...package-2@1.1.0) (YYYY-MM-DD)
+
+
+        ### Features
+
+        * **thing:** added ([SHA](https://github.com/lerna/conventional-commits-independent/commit/GIT_HEAD)) by <**Tester McPerson**>
       `);
     });
   });

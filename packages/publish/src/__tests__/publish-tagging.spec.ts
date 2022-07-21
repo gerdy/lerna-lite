@@ -1,5 +1,3 @@
-'use strict';
-
 // FIXME: better mock for version command
 jest.mock('../../../version/dist/lib/git-push', () =>
   jest.requireActual('../../../version/src/lib/__mocks__/git-push')
@@ -45,18 +43,18 @@ jest.mock('../lib/npm-dist-tag', () => jest.requireActual('../lib/__mocks__/npm-
 jest.mock('@lerna-lite/publish', () => jest.requireActual('../publish-command'));
 
 // mocked modules
-const { collectUpdates } = require('@lerna-lite/core');
-const npmDistTag = require('../lib/npm-dist-tag');
-const { npmPublish } = require('../lib/npm-publish');
+import { collectUpdates } from '@lerna-lite/core';
+import { npmPublish } from '../lib/npm-publish';
+import { add, remove } from '../lib/npm-dist-tag';
 
 // helpers
-const initFixture = require('@lerna-test/helpers').initFixtureFactory(__dirname);
+import helpers from '@lerna-test/helpers';
+const initFixture = helpers.initFixtureFactory(__dirname);
 
 // test command
-const { PublishCommand } = require('../index');
-const lernaPublish = require('@lerna-test/helpers').commandRunner(
-  require('../../../cli/src/cli-commands/cli-publish-commands')
-);
+import { PublishCommand } from '../index';
+import cliCommands from '../../../cli/src/cli-commands/cli-publish-commands';
+const lernaPublish = helpers.commandRunner(cliCommands);
 
 const yargParser = require('yargs-parser');
 
@@ -75,34 +73,34 @@ const createArgv = (cwd, ...args) => {
 test('publish --dist-tag next', async () => {
   const cwd = await initFixture('normal');
 
-  collectUpdates.setUpdated(cwd, 'package-1');
+  (collectUpdates as any).setUpdated(cwd, 'package-1');
 
   await new PublishCommand(createArgv(cwd, '--dist-tag', 'next'));
 
-  expect(npmPublish.registry.get('package-1')).toBe('next');
-  expect(npmDistTag.remove).not.toHaveBeenCalled();
+  expect((npmPublish as any).registry.get('package-1')).toBe('next');
+  expect(remove).not.toHaveBeenCalled();
 });
 
 test('publish --dist-tag nightly --canary', async () => {
   const cwd = await initFixture('normal');
 
-  collectUpdates.setUpdated(cwd, 'package-2');
+  (collectUpdates as any).setUpdated(cwd, 'package-2');
 
   await new PublishCommand(createArgv(cwd, '--dist-tag', 'nightly', '--canary'));
 
-  expect(npmPublish.registry.get('package-2')).toBe('nightly');
-  expect(npmDistTag.remove).not.toHaveBeenCalled();
+  expect((npmPublish as any).registry.get('package-2')).toBe('nightly');
+  expect(remove).not.toHaveBeenCalled();
 });
 
 test('publish --npm-tag deprecated', async () => {
   const cwd = await initFixture('normal');
 
-  collectUpdates.setUpdated(cwd, 'package-3');
+  (collectUpdates as any).setUpdated(cwd, 'package-3');
 
   await lernaPublish(cwd)('--npm-tag', 'deprecated');
 
-  expect(npmPublish.registry.get('package-3')).toBe('deprecated');
-  expect(npmDistTag.remove).not.toHaveBeenCalled();
+  expect((npmPublish as any).registry.get('package-3')).toBe('deprecated');
+  expect(remove).not.toHaveBeenCalled();
 });
 
 test('publish --temp-tag', async () => {
@@ -110,7 +108,7 @@ test('publish --temp-tag', async () => {
 
   await new PublishCommand(createArgv(cwd, '--temp-tag'));
 
-  expect(npmPublish.registry).toMatchInlineSnapshot(`
+  expect((npmPublish as any).registry).toMatchInlineSnapshot(`
 Map {
   "@integration/package-1" => "lerna-temp",
   "@integration/package-2" => "lerna-temp",
@@ -124,11 +122,11 @@ Map {
     otp: undefined,
   });
 
-  expect(npmDistTag.remove).toHaveBeenCalledWith('@integration/package-1@1.0.1', 'lerna-temp', conf, cache);
-  expect(npmDistTag.remove).toHaveBeenCalledWith('@integration/package-2@1.0.1', 'lerna-temp', conf, cache);
+  expect(remove).toHaveBeenCalledWith('@integration/package-1@1.0.1', 'lerna-temp', conf, cache);
+  expect(remove).toHaveBeenCalledWith('@integration/package-2@1.0.1', 'lerna-temp', conf, cache);
 
-  expect(npmDistTag.add).toHaveBeenCalledWith('@integration/package-1@1.0.1', 'CUSTOM', conf, cache); // <--
-  expect(npmDistTag.add).toHaveBeenCalledWith('@integration/package-2@1.0.1', 'latest', conf, cache);
+  expect(add).toHaveBeenCalledWith('@integration/package-1@1.0.1', 'CUSTOM', conf, cache); // <--
+  expect(add).toHaveBeenCalledWith('@integration/package-2@1.0.1', 'latest', conf, cache);
 });
 
 test('publish --dist-tag beta --temp-tag', async () => {
@@ -136,7 +134,7 @@ test('publish --dist-tag beta --temp-tag', async () => {
 
   await new PublishCommand(createArgv(cwd, '--dist-tag', 'beta', '--temp-tag'));
 
-  expect(npmPublish.registry).toMatchInlineSnapshot(`
+  expect((npmPublish as any).registry).toMatchInlineSnapshot(`
 Map {
   "@integration/package-1" => "lerna-temp",
   "@integration/package-2" => "lerna-temp",
@@ -150,41 +148,41 @@ Map {
     otp: undefined,
   });
 
-  expect(npmDistTag.add).toHaveBeenCalledWith('@integration/package-1@1.0.1', 'beta', conf, cache); // <--
-  expect(npmDistTag.add).toHaveBeenCalledWith('@integration/package-2@1.0.1', 'beta', conf, cache);
+  expect(add).toHaveBeenCalledWith('@integration/package-1@1.0.1', 'beta', conf, cache); // <--
+  expect(add).toHaveBeenCalledWith('@integration/package-2@1.0.1', 'beta', conf, cache);
 });
 
 test('publish prerelease --pre-dist-tag beta', async () => {
   const cwd = await initFixture('normal');
 
-  collectUpdates.setUpdated(cwd, 'package-1');
+  (collectUpdates as any).setUpdated(cwd, 'package-1');
 
   await new PublishCommand(createArgv(cwd, '--bump', 'prerelease', '--pre-dist-tag', 'beta'));
 
-  expect(npmPublish.registry.get('package-1')).toBe('beta');
-  expect(npmDistTag.remove).not.toHaveBeenCalled();
+  expect((npmPublish as any).registry.get('package-1')).toBe('beta');
+  expect(remove).not.toHaveBeenCalled();
 });
 
 test('publish non-prerelease --pre-dist-tag beta', async () => {
   const cwd = await initFixture('normal');
 
-  collectUpdates.setUpdated(cwd, 'package-1');
+  (collectUpdates as any).setUpdated(cwd, 'package-1');
 
   await new PublishCommand(createArgv(cwd, '--pre-dist-tag', 'beta'));
 
-  expect(npmPublish.registry.get('package-1')).toBe('latest');
-  expect(npmDistTag.remove).not.toHaveBeenCalled();
+  expect((npmPublish as any).registry.get('package-1')).toBe('latest');
+  expect(remove).not.toHaveBeenCalled();
 });
 
 test('publish non-prerelease --dist-tag next --pre-dist-tag beta', async () => {
   const cwd = await initFixture('normal');
 
-  collectUpdates.setUpdated(cwd, 'package-1');
+  (collectUpdates as any).setUpdated(cwd, 'package-1');
 
   await new PublishCommand(createArgv(cwd, '--dist-tag', 'next', '--pre-dist-tag', 'beta'));
 
-  expect(npmPublish.registry.get('package-1')).toBe('next');
-  expect(npmDistTag.remove).not.toHaveBeenCalled();
+  expect((npmPublish as any).registry.get('package-1')).toBe('next');
+  expect(remove).not.toHaveBeenCalled();
 });
 
 test('publish --pre-dist-tag beta --temp-tag', async () => {
@@ -205,7 +203,7 @@ test('publish --pre-dist-tag beta --temp-tag', async () => {
     )
   );
 
-  expect(npmPublish.registry).toMatchInlineSnapshot(`
+  expect((npmPublish as any).registry).toMatchInlineSnapshot(`
 Map {
   "@integration/package-1" => "lerna-temp",
   "@integration/package-2" => "lerna-temp",
@@ -219,6 +217,6 @@ Map {
     otp: undefined,
   });
 
-  expect(npmDistTag.add).toHaveBeenCalledWith('@integration/package-1@1.0.1-beta.0', 'beta', conf, cache);
-  expect(npmDistTag.add).toHaveBeenCalledWith('@integration/package-2@1.0.1-beta.0', 'beta', conf, cache);
+  expect(add).toHaveBeenCalledWith('@integration/package-1@1.0.1-beta.0', 'beta', conf, cache);
+  expect(add).toHaveBeenCalledWith('@integration/package-2@1.0.1-beta.0', 'beta', conf, cache);
 });
